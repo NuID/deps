@@ -102,7 +102,7 @@
     (assoc ds :deps updated-deps :aliases updated-aliases)))
 
 (defn localize! [deps lib]
-  (let [updates (compute-updates deps lib)]
+  (let [updates (conj (compute-updates deps lib) lib)]
     (doseq [u updates]
       (let [ds (localize-deps deps (read-deps deps u))
             path (deps-path deps u)]
@@ -124,7 +124,7 @@
     (.getName (first (git/git-log repo)))))
 
 (defn add-commit-messages [deps lib]
-  (let [updates (compute-updates deps lib)
+  (let [updates (conj (compute-updates deps lib) lib)
         f (fn [acc k]
             (prn k 'commit (symbol "message:"))
             (let [in (read-line)
