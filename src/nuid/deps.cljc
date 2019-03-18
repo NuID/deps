@@ -51,6 +51,7 @@
    (dep 'nuid/specs)
    (dep 'nuid/site)
    (dep 'nuid/repl)
+   (dep 'nuid/deps)
    (dep 'nuid/zka)
    (dep 'nuid/ecc)
    (dep 'nuid/bn)))
