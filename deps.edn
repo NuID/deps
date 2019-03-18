@@ -1,0 +1,8 @@
+{:deps
+ {org.clojure/clojure {:mvn/version "1.10.0"},
+  clj-jgit {:mvn/version "0.8.10"},
+  org.clojure/tools.deps.alpha
+  {:git/url "https://github.com/nuid/tools.deps.alpha.git",
+   :sha "9825f0ec1481178adb9a5ef308fbdb81da80e0f5"}},
+ :aliases {:repl {}},
+ :paths ["src"]}
