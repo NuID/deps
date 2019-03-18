@@ -133,9 +133,6 @@
               (assoc-in acc [k :message] in)))]
     (reduce f deps updates)))
 
-(defn add-circular-sha [deps lib]
-  (assoc-in deps [lib :sha] (rev (get-repo (deps-path deps lib)))))
-
 (defn add-commit-push! [path message]
   (prn 'pushing (symbol path))
   (sh/sh "git" "add" "." :dir path)
@@ -175,7 +172,6 @@
 
 (defn update! [deps lib]
   (-> (add-commit-messages deps lib)
-      (add-circular-sha lib)
       (update-deps! lib)))
 
 (defn add-dep [deps dep] (update deps :deps merge dep))
