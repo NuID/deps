@@ -5,7 +5,8 @@
         [clojure.java.shell :as sh]
         [clojure.java.io :as io]
         [clojure.edn :as edn]
-        [clojure.set :as set]])))
+        [clojure.set :as set]])
+   [clojure.string :as str]))
 
 (def home (System/getProperty "user.home"))
 (def library-directory (str home "/dev/nuid"))
@@ -26,6 +27,9 @@
      :git/url (str git-url-root "/front-end.git")}
     'nuid/initialize
     {:local/root (str library-directory "/front-end/lambda/initialize")
+     :git/url (str git-url-root "/front-end.git")}
+    'nuid/verify
+    {:local/root (str library-directory "/front-end/lambda/verify")
      :git/url (str git-url-root "/front-end.git")}
     'nuid/check-finalization
     {:local/root (str library-directory "/ethereum-registration/api/lambda/check-finalization")
