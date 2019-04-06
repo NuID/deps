@@ -199,6 +199,4 @@
 
   (compute-updates default-deps 'nuid/repl)
   (localize! default-deps 'nuid/repl)
-  (update! default-deps 'nuid/repl)
-
-  )
+  (update! default-deps 'nuid/repl))
