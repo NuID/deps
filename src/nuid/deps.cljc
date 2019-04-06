@@ -144,7 +144,8 @@
   (prn 'pushing (symbol path))
   (sh/sh "git" "add" "." :dir path)
   (sh/sh "git" "commit" "-m" message :dir path)
-  (sh/sh "git" "push" :dir path)
+  (let [p (sh/sh "git" "push" :dir path)]
+    (clojure.pprint/pprint p))
   (rev path))
 
 (defn dep-sha! [computed-deps lib]
