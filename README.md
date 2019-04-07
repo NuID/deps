@@ -6,7 +6,11 @@ Dependency management facilities for [`tools.deps`](https://clojure.org/guides/d
 
 [`tools.deps`](https://clojure.org/guides/deps_and_cli) allows for the specification of dependencies located at various "coordinates" (currently local, maven, and git). The `tools.deps` ecosystem allows developers to isolate functionality into small libraries while maintaining benefits commonly associated with the monorepo: code-sharing, circular-dependency avoidance, and rapid iteration on dependent modules. It really is [dependency heaven](https://www.youtube.com/watch?v=sStlTye-Kjk).
 
-In rapidly developing dependent libraries with many `:git/url` coordinates, I've found it desirable to `localize!` the git dependencies of a project that are changing frequently, i.e. convert them to `:local/root` coordinates so that no deployment step is needed to affect the changes. Once the changes have been finalized, the `localize!`'d coordinates must be `update!`'d back to `:git/url` coordinates with the appropriate (new) revision as the `:sha`, which must be done in accordance with the dependency tree (depth-first). This library automates those two tasks.
+In co-developing dependent libraries, I've found it convenient to `localize!` git coordinates of a project that are changing frequently, i.e. recursively convert them to `:local/root` coordinates so that no deployment step is needed to affect changes.
+
+Once the changes have finalized, the local coordinates must be `update!`'d back to `:git/url` coordinates with the appropriate (new) revision as the `:sha`, which must be done in accordance with the dependency tree (depth-first).
+
+This library automates recursively toggling between `:local/root` and `:git/url` coordinates in a `tools.deps` project.
 
 ## Notes
 
@@ -33,7 +37,7 @@ $ clj
 
 => (deps/localize! config 'some.lib/in.config)
 
-... make changes to some.lib/in.config and its dependencies that may also be specified in config ...
+... make changes to some.lib/in.config and its dependencies which may also be specified in config ...
 
 => (deps/update! config 'some.lib/in.config)
 
@@ -49,7 +53,9 @@ $ clj
 
 ## `deps.config.edn`
 
-The dependencies to be managed by `nuid.deps` must be specified in a configuration map, which most `nuid.deps` functions take as their first argument. I imagine this map will typically be generated from an `edn` configuration file (either local or shared) in combination with the `nuid.deps/read-config` function. The default path for `nuid.deps/read-config` is `./deps.config.edn`, i.e. a valid `edn` file named `deps.config.edn` in the current working directory. See [`deps.config.example.edn`](https://github.com/NuID/deps/blob/master/deps.config.example.edn) in the project's root and [syntax](#syntax) for more information on the configuration file.
+The dependencies to be managed by `nuid.deps` must be specified in a configuration map, which most `nuid.deps` functions take as their first argument.
+
+I imagine this map will typically be generated from an `edn` configuration file (either local or shared) in combination with the `nuid.deps/read-config` function. The default path for `nuid.deps/read-config` is `./deps.config.edn`. See [`deps.config.example.edn`](https://github.com/NuID/deps/blob/master/deps.config.example.edn) in the project's root and [syntax](#syntax) for more information on the configuration file.
 
 The configuration map is necessary because the vanilla `deps.edn` file must only reference one coordinate per dependency—`tools.deps` would have no way of disambiguating the intent if e.g. `:local/root`, `:git/url`, and `:git/sha` were all specified for a given library in its `deps.edn` entry. However, in order to `localize!` and `update!` dependencies, there must be a durable source from which we can retrieve the information necessary for the toggle.
 
