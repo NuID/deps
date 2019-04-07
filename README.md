@@ -39,10 +39,11 @@ $ clj
 
 => (deps/update! config 'some.lib/in.config)
 
-... nuid.deps is reading user input to add commit messages to each updated dependency, including some.lib/in.config ...
+... nuid.deps is reading user input to add commit messages to each updated dependency
 ... nuid.deps is committing and pushing ...
 
-=> ;; some.lib/in.config and all of its dependencies that also appear in config now reference the most up-to-date git revisions in their own deps.edn
+=> ;; some.lib/in.config and all of its dependencies that also appear in config
+   ;; now reference the most up-to-date git revisions in their own deps.edn
 
 => (def another-config (deps/read-config "/Users/example/dev/lib/another.deps.config.edn"))
 => ...
@@ -50,11 +51,11 @@ $ clj
 
 ## `deps.config.edn`
 
-The dependencies to be managed by this tool are specified in an `edn` configuration file. The default is `./deps.config.edn`.
+The dependencies to be managed by this tool are specified in a map that most of the functions take as their first parameter. I imagine this map will typically be generated from an `edn` configuration file. The default path for `nuid.deps/read-config` is `./deps.config.edn`.
 
-The reason this file is necessary is because `deps.edn` can only reference one coordinate type at a time—it would have no way of disambiguating the intent e.g. if all of `:local/root`, `:git/url`, and `:git/sha` were specified for a given library.
+The reason this configuration map is necessary is because `deps.edn` can only reference one coordinate type at a time—it would have no way of disambiguating the intent e.g. if all of `:local/root`, `:git/url`, and `:git/sha` were specified for a given library.
 
-The `deps.config.edn` (or whatever you decide to name it) file allows `nuid.deps` to find the library locally in order to `localize!` its dependents, and also defines where `nuid.deps` will push changes in an `update!`.
+The configuration map (potentially read from `deps.config.edn`, or whatever you decide to name it) allows `nuid.deps` functions to find a library locally in order to `localize!` its dependents, and also defines where `nuid.deps` will push changes in an `update!`.
 
 I've found this file generally useful within the `tools.deps` ecosystem for reading and automated manipulation of `deps.edn` files.
 
@@ -73,15 +74,21 @@ There is a more concise way to specify groups (loosely "repositories", which is 
 
 ```
 {'some/lib {:local/root "..." :git/url "..."},
+ ...
  :deps/repositories
  [{:repository/root "/Users/example/dev"
    :git/root "https://github.com"
    :repository/libs
    [repo1/lib1
-    repo1/lib2]}]}
+    repo1/lib2]}
+  ...]}
 ```
 
-This will read locally from `/Users/example/dev/repo1/lib<1,2,...>` and push to `https://github.com/repo1/lib<1,2,...>`.
+This will read locally from: `/Users/example/dev/repo1/lib<1,2,...>`
+
+And will push to: `https://github.com/repo1/lib<1,2,...>`.
+
+Correct...it basically just allows for a naming convention to be exploited.
 
 There are some other usage patterns as well, e.g. using `git@github.com` as the `:git/root` to use `ssh` to push to (potentially private) repositories, and specifying "repositories" within a single git repository by using `:git/url` instead of `:git/root`.
 
