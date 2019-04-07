@@ -101,9 +101,9 @@ There is a more concise way to specify groups (loosely "repositories", which is 
   ...]}
 ```
 
-This will read locally from: `/Users/example/dev/repo1/lib<1,2,...>`
+This will read locally from: `/Users/example/dev/repo1/lib<1,2,...>`,
 
-And will push to: `https://github.com/repo1/lib<1,2,...>`.
+and will push to: `https://github.com/repo1/lib<1,2,...>`.
 
 Correct...it basically just allows for a naming convention to be exploited.
 
@@ -132,10 +132,8 @@ $ clojure -A:cljfmt:cljfmt/fix # fix
 
 ```
 ## check
-$ npm outdated
 $ clojure -A:depot
 
 ## update
-$ npm upgrade -s
 $ clojure -A:depot:depot/update
 ```
