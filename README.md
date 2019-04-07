@@ -6,7 +6,7 @@ Dependency management facilities for [`tools.deps`](https://clojure.org/guides/d
 
 [`tools.deps`](https://clojure.org/guides/deps_and_cli) allows for the specification of dependencies at various types of "coordinates" (currently local, maven, and git). It allows developers to isolate functionality into small, modular libraries, but maintain the benefits commonly associated with the monorepo: code-sharing, circular-dependency avoidance, and frictionless local development of sibling modules. It really is [dependency heaven](https://www.youtube.com/watch?v=sStlTye-Kjk).
 
-In rapidly developing sibling libraries with many `:git/url` coordinates, it is often desirable to `localize!` the git dependencies of a project that are changing frequently, i.e. convert them to a  `:local/root` coordinate. Once changes have been made, those local coordinates must be `update!`d to the appropriate git revision, which must be done in accordance with the dependency tree. This library automates those two tasks.
+In rapidly developing sibling libraries with many `:git/url` coordinates, I've found it desirable to `localize!` the git dependencies of a project that are changing frequently, i.e. convert them to a  `:local/root` coordinate. Once changes have been made, those local coordinates must be `update!`d to the appropriate git revision, which must be done in accordance with the dependency tree. This library automates those two tasks.
 
 ## Notes
 
@@ -35,14 +35,14 @@ $ clj
 
 => (deps/localize! config 'some.lib/in.config)
 
-... make changes to some.lib/in.config and it's dependencies that may also be specified in config
+... make changes to some.lib/in.config and its dependencies that may also be specified in config ...
 
 => (deps/update! config 'some.lib/in.config)
 
-... add commit messages to each updated dependency, including some.lib/in.config
-... _committing and pushing_
+... nuid.deps is reading user input to add commit messages to each updated dependency, including some.lib/in.config ...
+... nuid.deps is committing and pushing ...
 
-=> ;; some.lib/in.config and all of it's dependencies that also appear in config now reference the most up-to-date git revisions in their own deps.edn
+=> ;; some.lib/in.config and all of its dependencies that also appear in config now reference the most up-to-date git revisions in their own deps.edn
 
 => (def another-config (deps/read-config "/Users/example/dev/lib/another.deps.config.edn"))
 => ...
@@ -54,11 +54,11 @@ The dependencies to be managed by this tool are specified in an `edn` configurat
 
 The reason this file is necessary is because `deps.edn` can only reference one coordinate type at a time—it would have no way of disambiguating the intent e.g. if all of `:local/root`, `:git/url`, and `:git/sha` were specified for a given library.
 
-The `deps.config.edn` (or whatever you decide to name it, get creative!) file allows `nuid.deps` to find the library locally in order to `localize!` its dependents, and also defines where `nuid.deps` will push changes in an `update!`.
+The `deps.config.edn` (or whatever you decide to name it) file allows `nuid.deps` to find the library locally in order to `localize!` its dependents, and also defines where `nuid.deps` will push changes in an `update!`.
 
 I've found this file generally useful within the `tools.deps` ecosystem for reading and automated manipulation of `deps.edn` files.
 
-Tangentially, using this library this causes `deps.edn` to tend towards autopretty: both `localize!` and `update!` cause the file to be written via `pprint`. I find this favorable, but perhaps it's not for everyone.
+Tangentially, using this library this causes `deps.edn` to tend toward autopretty: both `localize!` and `update!` cause the file to be written via `pprint`. I find this favorable, but perhaps it's not for everyone.
 
 #### syntax:
 
@@ -87,9 +87,26 @@ There are some other usage patterns as well, e.g. using `git@github.com` as the 
 
 #### `git`
 
-This library shells out to `git`, means it will inherit configuration from the environment.
+This library shells out to `git`, which means it will inherit configuration from the environment. The git interactions are altogether primitive.
 
-Beyond allowing for the specification of a commit message, it does very little in terms of specifying (or allowing the specification of) git commands—it will push to the currently checked out branch according to the environment configuration of `git commit` and `git push`. This includes `git hooks`, commit signing, etc..
+Beyond allowing for the specification of commit messages, `nuid.deps` does very little in terms of specifying (or allowing the specification of) git commands—it will push to the currently checked out branch according to the environment configuration of `git commit` and `git push`. This includes `git hooks`, commit signing, etc..
+
+#### `tools.deps` alias
+
+This library also adds a forked and regularly rebased branch of `tools.deps` with `add-lib` included (at least until this feature makes it to master). It can be useful to add it as a standalone `alias` in `deps.edn` for dynamic `lib` and `dep` management, e.g.:
+
+```
+:aliases
+{:repl
+ {:extra-deps
+  {nuid/deps
+   {:git/url "https://github.com/nuid/deps.git",
+    :sha "..."}}}}
+```
+
+When started with `clj -A:repl`, the REPL's classpath can be changed dynamically using `tools.deps/add-lib`. That change can be then persisted using `nuid.deps/add-dep!`. This functionality is experimental, and the API isn't the most empowering quite yet.
+
+The dependencies of the project can also be `localize!`d and subsequently `update!`d without leaving the REPL. After an `update!`, it would require a REPL refresh to clone the new revisions into `gitlibs` and add them to the classpath, but the new revisions would be identical to the local coordinates already on the classpath after the original `localize!` and subsequent `(require '[...] :reload-all)`.
 
 ## Contributing
 

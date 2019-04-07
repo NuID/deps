@@ -1,13 +1,12 @@
-;; See README for additional details on deps.config.edn
 {local/lib
- {:local/root "/Users/example/dev/locallib"
-  :git/url "https://github.com/example/locallib.git"}
+ {:local/root "/Users/example/dev/locallib",
+  :git/url "https://github.com/example/locallib.git"},
  private/lib
- {:local/root "/Users/example/dev/privatelib"
-  :git/url "git@github.com/example/privatelib.git"}
+ {:local/root "/Users/example/dev/privatelib",
+  :git/url "git@github.com/example/privatelib.git"},
  :deps/repositories
- [{:repository/root "/Users/example/dev"
-   :git/root "https://github.com"
+ [{:repository/root "/Users/example/dev",
+   :git/root "https://github.com",
    :repository/libraries
    [nuid/cryptography
     nuid/exception
