@@ -4,15 +4,15 @@ Dependency management facilities for [`tools.deps`](https://clojure.org/guides/d
 
 ## Motivation
 
-[`tools.deps`](https://clojure.org/guides/deps_and_cli) allows for the specification of dependencies at different types of coordinates (local, maven, and git). It allows developers to isolate functionality into small, modular libraries, but maintain the benefits commonly associated with the monorepo: code-sharing, circular-dependency avoidance, and frictionless local development of sibling modules. It really is [dependency heaven](https://www.youtube.com/watch?v=sStlTye-Kjk).
+[`tools.deps`](https://clojure.org/guides/deps_and_cli) allows for the specification of dependencies at various types of "coordinates" (currently local, maven, and git). It allows developers to isolate functionality into small, modular libraries, but maintain the benefits commonly associated with the monorepo: code-sharing, circular-dependency avoidance, and frictionless local development of sibling modules. It really is [dependency heaven](https://www.youtube.com/watch?v=sStlTye-Kjk).
 
-In rapidly developing codebases with many `:git/url` coordinates, it is often desirable to `localize!` the git dependencies of a project that are changing frequently, i.e. convert them to a  `:local/root` coordinate. Once relevant changes have been made, those local coordinates must be `update!`d to the appropriate git revision, which must be done in accordance with the dependency tree. This library automates those two tasks.
+In rapidly developing sibling libraries with many `:git/url` coordinates, it is often desirable to `localize!` the git dependencies of a project that are changing frequently, i.e. convert them to a  `:local/root` coordinate. Once changes have been made, those local coordinates must be `update!`d to the appropriate git revision, which must be done in accordance with the dependency tree. This library automates those two tasks.
 
 ## Notes
 
 `tools.deps` is alpha software, and `nuid.deps` is really just a few helper funtions on top of it. There are rough edges.
 
-`nuid.deps` requires a map (e.g. `deps.config.edn`) that specifies how to find dependencies locally and where to push them when they are ready to be `update!`d to allow for variation between development environments (e.g. not everyone uses `~/dev/`). See `deps.config.example.edn` and below for more information.
+`nuid.deps` requires a map (e.g. read from `deps.config.edn`) that specifies how to find dependencies locally and where to push them when they are ready to be `update!`d. This allows for variation between development environments (e.g. not everyone uses `~/dev/`). See `deps.config.example.edn` and [below](#depsconfigedn) for more information.
 
 The dependency tree construction and traversal is pretty naive. `nuid.deps` is not optimized.
 
@@ -54,9 +54,11 @@ The dependencies to be managed by this tool are specified in an `edn` configurat
 
 The reason this file is necessary is because `deps.edn` can only reference one coordinate type at a time—it would have no way of disambiguating the intent e.g. if all of `:local/root`, `:git/url`, and `:git/sha` were specified for a given library.
 
-The `deps.config.edn` (or whatever you name it) file allows `nuid.deps` to find the library locally in order to `localize!` its dependents, and also defines where `nuid.deps` will push the changes for `update!`.
+The `deps.config.edn` (or whatever you decide to name it, get creative!) file allows `nuid.deps` to find the library locally in order to `localize!` its dependents, and also defines where `nuid.deps` will push changes in an `update!`.
 
 I've found this file generally useful within the `tools.deps` ecosystem for reading and automated manipulation of `deps.edn` files.
+
+Tangentially, using this library this causes `deps.edn` to tend towards autopretty: both `localize!` and `update!` cause the file to be written via `pprint`. I find this favorable, but perhaps it's not for everyone.
 
 #### syntax:
 
