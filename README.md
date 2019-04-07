@@ -75,10 +75,10 @@ There is a more concise way to specify groups (loosely "repositories", which is 
 {'some/lib {:local/root "..." :git/url "..."},
  :deps/repositories
  [{:repository/root "/Users/example/dev"
- :git/root "https://github.com"
- :repository/libs
- [repo1/lib1
-  repo1/lib2]}]}
+   :git/root "https://github.com"
+   :repository/libs
+   [repo1/lib1
+    repo1/lib2]}]}
 ```
 
 This will read locally from `/Users/example/dev/repo1/lib<1,2,...>` and push to `https://github.com/repo1/lib<1,2,...>`.
