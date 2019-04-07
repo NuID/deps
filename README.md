@@ -100,7 +100,7 @@ There are some other usage patterns as well, e.g. using `git@github.com` as the 
 
 ## `tools.deps` alias
 
-`nuid.deps` also adds to the classpath a forked and regularly rebased branch of `tools.deps` with [`add-lib`](http://insideclojure.org/2018/05/04/add-lib/) included (at least until this feature makes it into `master`). It can be useful to add `nuid.deps` as an `:extra-dependency` in a standalone `alias` in a project's `deps.edn` for dynamic `lib` and `dep` management, e.g.:
+`nuid.deps` also adds to the classpath a [forked and regularly rebased branch](https://github.com/NuID/tools.deps.alpha/tree/add-lib) of `tools.deps` with [`add-lib`](http://insideclojure.org/2018/05/04/add-lib/) included (at least until this feature makes it into `master`). It can be useful to add `nuid.deps` as an `:extra-dependency` in a standalone `alias` in a project's `deps.edn` for dynamic `lib` and `dep` management, e.g.:
 
 ```
 :aliases
