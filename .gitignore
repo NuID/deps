@@ -42,3 +42,6 @@ logs
 log
 tmp
 *.tmp
+
+# nuid.deps
+deps.config.edn

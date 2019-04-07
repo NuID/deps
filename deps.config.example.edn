@@ -1,0 +1,23 @@
+;; See README for additional details on deps.config.edn
+{local/lib
+ {:local/root "/Users/example/dev/locallib"
+  :git/url "https://github/example/locallib.git"}
+ private/lib
+ {:local/root "/Users/example/dev/privatelib"
+  :git/url "git@github.com/example/privatelib.git"}
+ :deps/repositories
+ [{:repository/root "/Users/example/dev"
+   :git/root "https://github.com"
+   :repository/libraries
+   [nuid/cryptography
+    nuid/exception
+    nuid/ethereum
+    nuid/transit
+    nuid/utils
+    nuid/specs
+    nuid/bytes
+    nuid/deps
+    nuid/zka
+    nuid/ecc
+    nuid/hex
+    nuid/bn]}]}
