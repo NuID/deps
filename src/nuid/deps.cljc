@@ -37,25 +37,25 @@
   [& [{:keys [path] :or {path (str (System/getProperty "user.dir") "/deps.config.edn")}}]]
   (parse-config (read-edn path)))
 
-(defn deps-path [deps lib] (str (:local/root (lib deps)) "/deps.edn"))
+(defn deps-path [config lib] (str (:local/root (config lib)) "/deps.edn"))
 
 (defn read-deps
-  ([deps lib] (read-deps (deps-path deps lib)))
+  ([config lib] (read-deps (deps-path config lib)))
   ([path] (read-edn path)))
 
 (defn compute-updates
-  ([deps lib] (compute-updates deps #{} lib))
-  ([deps acc lib]
-   (let [ds (read-deps deps lib)
-         eds (set (mapcat (comp keys :extra-deps second) (:aliases ds)))
-         all-ds (set/union (set (keys (:deps ds))) eds)
-         all (set (keys deps))
-         i (set/intersection all-ds all)
+  ([config lib] (compute-updates config #{} lib))
+  ([config acc lib]
+   (let [deps (read-deps config lib)
+         extra-deps (set (mapcat (comp keys :extra-deps second) (:aliases deps)))
+         all-deps (set/union (set (keys (:deps deps))) extra-deps)
+         all (set (keys config))
+         i (set/intersection all-deps all)
          d (set/difference i acc)
          u (set/union i acc)]
      (if (empty? d)
        acc
-       (reduce (fn [a l] (set/union a (compute-updates deps a l))) u d)))))
+       (reduce (fn [a l] (set/union a (compute-updates config a l))) u d)))))
 
 (defn extra-deps-xf [coords [k v]]
   [k (if-let [a (:extra-deps v)]
@@ -63,19 +63,19 @@
          (assoc v :extra-deps b))
        v)])
 
-(defn localize-deps [deps ds]
+(defn localize-deps [config deps]
   (let [as-local-coord (fn [[k v]] [k (select-keys v [:local/root])])
-        local-coords (into {} (map as-local-coord) deps)
-        updated-deps (merge (:deps ds) (select-keys local-coords (keys (:deps ds))))
-        updated-aliases (into {} (map (partial extra-deps-xf local-coords)) (:aliases ds))]
-    (assoc ds :deps updated-deps :aliases updated-aliases)))
+        local-coords (into {} (map as-local-coord) config)
+        updated-deps (merge (:deps deps) (select-keys local-coords (keys (:deps deps))))
+        updated-aliases (into {} (map (partial extra-deps-xf local-coords)) (:aliases deps))]
+    (assoc deps :deps updated-deps :aliases updated-aliases)))
 
-(defn localize! [deps lib]
-  (let [updates (conj (compute-updates deps lib) lib)]
+(defn localize! [config lib]
+  (let [updates (conj (compute-updates config lib) lib)]
     (doseq [u updates]
-      (let [ds (localize-deps deps (read-deps deps u))
-            path (deps-path deps u)]
-        (write-edn! path ds)))))
+      (let [deps (localize-deps config (read-deps config u))
+            path (deps-path config u)]
+        (write-edn! path deps)))))
 
 (defn get-repo [f]
   (try (git/load-repo f)
@@ -92,15 +92,15 @@
   (let [repo (if (string? repo) (get-repo repo) repo)]
     (.getName (first (git/git-log repo)))))
 
-(defn add-commit-messages [deps lib]
-  (let [updates (conj (compute-updates deps lib) lib)
+(defn add-commit-messages [config lib]
+  (let [updates (conj (compute-updates config lib) lib)
         f (fn [acc k]
             (prn k 'commit (symbol "message:"))
             (let [in (read-line)
                   in (if (empty? in) (str "Updated " k " dependencies") in)]
               (prn in)
               (assoc-in acc [k :message] in)))]
-    (reduce f deps updates)))
+    (reduce f config updates)))
 
 (defn add-commit-push! [path message]
   (prn 'pushing (symbol path))
@@ -110,50 +110,50 @@
     (clojure.pprint/pprint p))
   (rev path))
 
-(defn dep-sha! [computed-deps lib]
-  (let [path (:local/root (lib computed-deps))
+(defn dep-sha! [config lib]
+  (let [path (:local/root (lib config))
         v (if (clean? path)
             (rev path)
-            (add-commit-push! path (:message (lib computed-deps))))]
-    (assoc-in computed-deps [lib :sha] v)))
+            (add-commit-push! path (:message (lib config))))]
+    (assoc-in config [lib :sha] v)))
 
-(defn update-deps [deps ds]
+(defn update-deps [config deps]
   (let [as-git-coord (fn [[k v]] [k (select-keys v [:git/url :sha])])
-        git-coords (into {} (map as-git-coord) deps)
-        updated-deps (merge (:deps ds) (select-keys git-coords (keys (:deps ds))))
-        updated-aliases (into {} (map (partial extra-deps-xf git-coords)) (:aliases ds))]
-    (assoc ds :deps updated-deps :aliases updated-aliases)))
+        git-coords (into {} (map as-git-coord) config)
+        updated-deps (merge (:deps deps) (select-keys git-coords (keys (:deps deps))))
+        updated-aliases (into {} (map (partial extra-deps-xf git-coords)) (:aliases deps))]
+    (assoc deps :deps updated-deps :aliases updated-aliases)))
 
-(defn update-deps! [deps lib]
-  (let [ds (read-deps deps lib)
-        all-libs (set (keys deps))
-        updated-libs (set (map first (filter (comp :sha second) deps)))
-        ds-libs (set (keys (:deps ds)))
-        extra-ds-libs (set (mapcat (comp keys :extra-deps second) (:aliases ds)))
-        all-ds-libs (set/union ds-libs extra-ds-libs)
-        libs-to-update (set/difference (set/intersection all-ds-libs all-libs) updated-libs)]
+(defn update-deps! [config lib]
+  (let [deps (read-deps config lib)
+        all-libs (set (keys config))
+        updated-libs (set (map first (filter (comp :sha second) config)))
+        deps-libs (set (keys (:deps deps)))
+        extra-deps-libs (set (mapcat (comp keys :extra-deps second) (:aliases deps)))
+        all-deps-libs (set/union deps-libs extra-deps-libs)
+        libs-to-update (set/difference (set/intersection all-deps-libs all-libs) updated-libs)]
     (if (empty? libs-to-update)
-      (let [path (deps-path deps lib)
-            uds (update-deps deps ds)]
-        (write-edn! path uds)
-        (dep-sha! deps lib))
-      (let [c (reduce (fn [_ l] (update-deps! deps l)) {} libs-to-update)]
+      (let [updated-deps (update-deps config deps)
+            path (deps-path config lib)]
+        (write-edn! path updated-deps)
+        (dep-sha! config lib))
+      (let [c (reduce (fn [_ l] (update-deps! config l)) {} libs-to-update)]
         (update-deps! c lib)))))
 
-(defn update! [deps lib]
-  (-> (add-commit-messages deps lib)
+(defn update! [config lib]
+  (-> (add-commit-messages config lib)
       (update-deps! lib)))
 
 (defn add-dep [deps dep] (update deps :deps merge dep))
 
 (defn add-dep!
-  ([deps lib dep] (add-dep! (deps-path deps lib) dep))
+  ([config lib dep] (add-dep! (deps-path config lib) dep))
   ([path dep] (let [deps (add-dep (read-deps path) dep)]
                 (write-edn! path deps))))
 
 (defn remove-dep [deps lib] (update deps :deps dissoc lib))
 
 (defn remove-dep!
-  ([deps lib rmlib] (remove-dep! (deps-path deps lib) rmlib))
+  ([config lib rmlib] (remove-dep! (deps-path config lib) rmlib))
   ([path lib] (let [deps (remove-dep (read-deps path) lib)]
                 (write-edn! path deps))))
