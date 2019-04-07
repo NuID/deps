@@ -44,6 +44,7 @@
   ([path] (read-edn path)))
 
 (defn compute-updates
+  "Computes the set of libraries that need to be updated as part of updating `lib`."
   ([config lib] (compute-updates config #{} lib))
   ([config acc lib]
    (let [deps (read-deps config lib)
@@ -70,7 +71,10 @@
         updated-aliases (into {} (map (partial extra-deps-xf local-coords)) (:aliases deps))]
     (assoc deps :deps updated-deps :aliases updated-aliases)))
 
-(defn localize! [config lib]
+(defn localize!
+  "Recursively converts `:git/url` coordinates in `lib` and its dependencies
+  defined in `config` to `:local/root` coordinates for local development."
+  [config lib]
   (let [updates (conj (compute-updates config lib) lib)]
     (doseq [u updates]
       (let [deps (localize-deps config (read-deps config u))
@@ -140,13 +144,18 @@
       (let [c (reduce (fn [_ l] (update-deps! config l)) {} libs-to-update)]
         (update-deps! c lib)))))
 
-(defn update! [config lib]
+(defn update!
+  "First prompts the user for the commit messages to be applied. Then recursively
+  updates `:local/root` coordinates in `lib` and its dependencies defined in
+  `config` to `:git/url` coordinates at the most recent revision (`:sha`)."
+  [config lib]
   (-> (add-commit-messages config lib)
       (update-deps! lib)))
 
 (defn add-dep [deps dep] (update deps :deps merge dep))
 
 (defn add-dep!
+  "Adds `dep` to the `deps.edn` file for `lib` as defined in `config`, or at `path`."
   ([config lib dep] (add-dep! (deps-path config lib) dep))
   ([path dep] (let [deps (add-dep (read-deps path) dep)]
                 (write-edn! path deps))))
@@ -154,6 +163,8 @@
 (defn remove-dep [deps lib] (update deps :deps dissoc lib))
 
 (defn remove-dep!
+  "Removes `rmlib` from the `deps.edn` file for `lib` as defined in `config`, or
+  `lib` from the `deps.edn` file at `path`."
   ([config lib rmlib] (remove-dep! (deps-path config lib) rmlib))
   ([path lib] (let [deps (remove-dep (read-deps path) lib)]
                 (write-edn! path deps))))
