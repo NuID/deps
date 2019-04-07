@@ -4,17 +4,15 @@ Dependency management facilities for [`tools.deps`](https://clojure.org/guides/d
 
 ## Motivation
 
-[`tools.deps`](https://clojure.org/guides/deps_and_cli) allows for the specification of dependencies at various types of "coordinates" (currently local, maven, and git). It allows developers to isolate functionality into small, modular libraries, but maintain the benefits commonly associated with the monorepo: code-sharing, circular-dependency avoidance, and frictionless local development of sibling modules. It really is [dependency heaven](https://www.youtube.com/watch?v=sStlTye-Kjk).
+[`tools.deps`](https://clojure.org/guides/deps_and_cli) allows for the specification of dependencies located at various "coordinates" (currently local, maven, and git). The `tools.deps` ecosystem allows developers to isolate functionality into small libraries while maintaining benefits commonly associated with the monorepo: code-sharing, circular-dependency avoidance, and rapid iteration on dependent modules. It really is [dependency heaven](https://www.youtube.com/watch?v=sStlTye-Kjk).
 
-In rapidly developing sibling libraries with many `:git/url` coordinates, I've found it desirable to `localize!` the git dependencies of a project that are changing frequently, i.e. convert them to `:local/root` coordinates. Once changes have been made, those local coordinates must be `update!`d back to git coordinates at the appropriate (new) revision, which must be done in accordance with the dependency tree. This library automates those two tasks.
+In rapidly developing dependent libraries with many `:git/url` coordinates, I've found it desirable to `localize!` the git dependencies of a project that are changing frequently, i.e. convert them to `:local/root` coordinates so that no deployment step is needed to affect the changes. Once the changes have been finalized, the `localize!`'d coordinates must be `update!`'d back to `:git/url` coordinates with the appropriate (new) revision as the `:sha`, which must be done in accordance with the dependency tree (depth-first). This library automates those two tasks.
 
 ## Notes
 
 `tools.deps` is alpha software, and `nuid.deps` is really just a few helper funtions on top of it. There are rough edges.
 
-`nuid.deps` requires a map (e.g. read from `deps.config.edn`) that specifies how to find dependencies locally and where to push them when they are ready to be `update!`d. This allows for variation between development environments (e.g. not everyone uses `~/dev/`). See `deps.config.example.edn` and [below](#depsconfigedn) for more information.
-
-The dependency tree construction and traversal is pretty naive. `nuid.deps` is not optimized.
+Dependency tree construction and traversal is pretty naive. `nuid.deps` is entirely unoptimized.
 
 ## Requirements
 
@@ -49,9 +47,54 @@ $ clj
 => ...
 ```
 
+## `deps.config.edn`
+
+The dependencies to be managed by `nuid.deps` must be specified in a configuration map, which most `nuid.deps` functions take as their first argument. I imagine this map will typically be generated from an `edn` configuration file (either local or shared) in combination with the `nuid.deps/read-config` function. The default path for `nuid.deps/read-config` is `./deps.config.edn`, i.e. a valid `edn` file named `deps.config.edn` in the current working directory. See [`deps.config.example.edn`](https://github.com/NuID/deps/blob/master/deps.config.example.edn) in the project's root and [syntax](#syntax) for more information on the configuration file.
+
+The configuration map is necessary because the vanilla `deps.edn` file must only reference one coordinate per dependency—`tools.deps` would have no way of disambiguating the intent if e.g. `:local/root`, `:git/url`, and `:git/sha` were all specified for a given library in its `deps.edn` entry. However, in order to `localize!` and `update!` dependencies, there must be a durable source from which we can retrieve the information necessary for the toggle.
+
+The configuration map holds two pieces of information about each library:
+
+* First, it holds the `:local/root` which allows `nuid.deps` functions to locate libraries on the local filesystem in order to recursively `localize!` the input library's dependencies. When dependencies are `localize!`'d, it is easy to iterate without a deployment step necessary to affect changes; feedback is essentially immediate.
+
+* Second, the configuration map holds a library's `:git/url`, i.e. the repository that `nuid.deps` will push changes to while walking the dependency tree to `update!` each dependency in an appropriate order.
+
+I've found the configuration file generally useful within the `tools.deps` ecosystem for reading and automated manipulation of `deps.edn` files. Tangentially, using this library this causes `deps.edn` files to tend autopretty: both `localize!` and `update!` cause every `deps.edn` they touch to be written via `pprint`. I find this favorable, but perhaps it's not for everyone.
+
+### syntax:
+
+The syntax of the `deps.config.edn` file is standard `edn`, and it looks somewhat similar to the `:deps` map of a  `deps.edn` file. However, it specifies both `:local/root` and `:git/url` for each specified library:
+
+```
+{some/lib {:local/root "..." :git/url "..."}
+ ...}
+```
+
+There is a more concise way to specify groups (loosely "deps/repositories", which is probably poor nomenclature given the context) of related libraries as well:
+
+```
+{'some/lib {:local/root "..." :git/url "..."},
+...
+:deps/repositories
+[{:repository/root "/Users/example/dev"
+:git/root "https://github.com"
+:repository/libs
+[repo1/lib1
+repo1/lib2]}
+...]}
+```
+
+This will cause `nuid.deps` to read locally from: `/Users/example/dev/repo1/lib<1,2,...>`,
+
+and to push to: `https://github.com/repo1/lib<1,2,...>`.
+
+Correct...the `:deps/repositories` key basically just allows for the exploitation of naming conventions.
+
+There are some other usage patterns as well, e.g. using `git@github.com` as the `:git/root` to push to (potentially private) repositories using `ssh`, and specifying a "deps/repository" within a single git repository by using `:git/url` instead of `:git/root`.
+
 ## `tools.deps` alias
 
-This library also adds a forked and regularly rebased branch of `tools.deps` with `add-lib` included (at least until this feature makes it to master). It can be useful to add it as a standalone `alias` in `deps.edn` for dynamic `lib` and `dep` management, e.g.:
+`nuid.deps` also adds to the classpath a forked and regularly rebased branch of `tools.deps` with [`add-lib`](http://insideclojure.org/2018/05/04/add-lib/) included (at least until this feature makes it into `master`). It can be useful to add `nuid.deps` as an `:extra-dependency` in a standalone `alias` in a project's `deps.edn` for ultradynamic `lib` and `dep` management, e.g.:
 
 ```
 :aliases
@@ -62,58 +105,17 @@ This library also adds a forked and regularly rebased branch of `tools.deps` wit
     :sha "..."}}}}
 ```
 
-When started with `clj -A:repl`, the REPL's classpath can be changed dynamically using `tools.deps/add-lib`. That change can be then persisted using `nuid.deps/add-dep!`. This functionality is experimental, and the API isn't the most empowering quite yet.
+Now, when started with `clj -A:repl` or similar, dependencies of the project can be `localize!`'d for rapid local development iteration, and subsequently `update!`'d to reflect the latest revisions in their `deps.edn` files, all without leaving the REPL.<sup>1<sup>]
 
-The dependencies of the project can also be `localize!`d and subsequently `update!`d without leaving the REPL. After an `update!`, it would require a REPL refresh to clone the new revisions into `gitlibs` and add them to the classpath, but the new revisions would be identical to the local coordinates already on the classpath after the original `localize!` and subsequent `(require '[...] :reload-all)`.
+Further, the REPL's classpath can be changed dynamically using `tools.deps/add-lib`. If the added library becomes more than a transient trial, it can be persisted as a dependency in `deps.edn` using `nuid.deps/add-dep!`. This functionality is experimental, and the API isn't the most empowering quite yet.
 
-## `deps.config.edn`
-
-The dependencies to be managed by this tool are specified in a map that most of the functions take as their first parameter. I imagine this map will typically be generated from an `edn` configuration file. The default path for `nuid.deps/read-config` is `./deps.config.edn`.
-
-The reason this configuration map is necessary is because `deps.edn` can only reference one coordinate type at a time—it would have no way of disambiguating the intent e.g. if all of `:local/root`, `:git/url`, and `:git/sha` were specified for a given library.
-
-The configuration map (potentially read from `deps.config.edn`, or whatever you decide to name it) allows `nuid.deps` functions to find a library locally in order to recursively `localize!` its dependents, and also defines where `nuid.deps` will push changes in an `update!`.
-
-I've found this file generally useful within the `tools.deps` ecosystem for reading and automated manipulation of `deps.edn` files.
-
-Tangentially, using this library this causes `deps.edn` to tend toward autopretty: both `localize!` and `update!` cause the file to be written via `pprint`. I find this favorable, but perhaps it's not for everyone.
-
-### syntax:
-
-The syntax of the `deps.config.edn` file is standard `edn`, and it looks similar to the `:deps` map of a  `deps.edn` file. However, it specifies both `:local/root` and `:git/url` for each specified library:
-
-```
-{'some/lib {:local/root "..." :git/url "..."}
- ...}
-```
-
-There is a more concise way to specify groups (loosely "repositories", which is probably a poor choice of terminology given the context) of related libraries as well:
-
-```
-{'some/lib {:local/root "..." :git/url "..."},
- ...
- :deps/repositories
- [{:repository/root "/Users/example/dev"
-   :git/root "https://github.com"
-   :repository/libs
-   [repo1/lib1
-    repo1/lib2]}
-  ...]}
-```
-
-This will read locally from: `/Users/example/dev/repo1/lib<1,2,...>`,
-
-and will push to: `https://github.com/repo1/lib<1,2,...>`.
-
-Correct...it basically just allows for a naming convention to be exploited.
-
-There are some other usage patterns as well, e.g. using `git@github.com` as the `:git/root` to use `ssh` to push to (potentially private) repositories, and specifying "repositories" within a single git repository by using `:git/url` instead of `:git/root`.
+<sup>1<sup>After an `update!`, it would require a REPL refresh to clone any new revisions into `gitlibs` and add them to the classpath. However the new revisions will be identical to the local coordinates already on the classpath after the original (one-time) call to  `localize!` and subsequent calls to `(require '[...] :reload-all)`, so the REPL refresh is essentially unnecessary.
 
 ## `git`
 
 This library shells out to `git`, which means it will inherit configuration from the environment. The git interactions are altogether primitive.
 
-Beyond allowing for the specification of commit messages, `nuid.deps` does very little in terms of specifying (or allowing the specification of) git commands—it will push to the currently checked out branch according to the environment configuration of `git commit` and `git push`. This includes `git hooks`, commit signing, etc..
+Beyond allowing for the specification of commit messages, `nuid.deps` does very little in terms of specifying (or allowing the specification of) git commands—**it will push to the currently checked out branch** according to the environment configuration of `git commit` and `git push`. This includes `git hooks`, commit signing, etc..
 
 ## Contributing
 
