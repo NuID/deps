@@ -85,6 +85,12 @@ This will read locally from `/Users/example/dev/repo1/lib<1,2,...>` and push to 
 
 There are some other usage patterns as well, e.g. using `git@github.com` as the `:git/root` to use `ssh` to push to (potentially private) repositories, and specifying "repositories" within a single git repository by using `:git/url` instead of `:git/root`.
 
+#### `git`
+
+This library shells out to `git`, means it will inherit configuration from the environment.
+
+Beyond allowing for the specification of a commit message, it does very little in terms of specifying (or allowing the specification of) git commands—it will push to the currently checked out branch according to the environment configuration of `git commit` and `git push`. This includes `git hooks`, commit signing, etc..
+
 ## Contributing
 
 PRs would be most welcome! At the top of my list is `spec`ing the library, making the API more friendly in map, reduce, etc. for bulk operations, and revisiting the `git` interactions entirely.
