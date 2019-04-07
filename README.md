@@ -65,7 +65,7 @@ The configuration map holds two pieces of information about each library:
 
 I imagine this map will typically be generated from an `edn` configuration file (either local or shared) in combination with the `nuid.deps/read-config` function. The default path for `nuid.deps/read-config` is `./deps.config.edn`. See [`deps.config.example.edn`](https://github.com/NuID/deps/blob/master/deps.config.example.edn) in the project's root and [syntax](#syntax) for more information on the configuration file.
 
-I've found the configuration file generally useful within the `tools.deps` ecosystem for reading and automated manipulation of `deps.edn` files. Tangentially, using this library this causes `deps.edn` files to tend autopretty: both `localize!` and `update!` cause every `deps.edn` they touch to be written via `pprint`. I find this favorable, but perhaps it's not for everyone.
+I've found the configuration file generally useful within the `tools.deps` ecosystem for reading and automated manipulation of `deps.edn` files. Tangentially, using this library causes `deps.edn` files to tend autopretty: both `localize!` and `update!` cause every `deps.edn` they touch to be written via `pprint`. I find this favorable, but perhaps it's not for everyone.
 
 ### syntax:
 
