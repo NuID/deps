@@ -6,11 +6,11 @@ Dependency management facilities for [`tools.deps`](https://clojure.org/guides/d
 
 [`tools.deps`](https://clojure.org/guides/deps_and_cli) allows for the specification of dependencies located at various "coordinates" (currently local, maven, and git). The `tools.deps` ecosystem allows developers to isolate functionality into small libraries while maintaining benefits commonly associated with the monorepo: code-sharing, circular-dependency avoidance, and rapid iteration on dependent modules. It really is [dependency heaven](https://www.youtube.com/watch?v=sStlTye-Kjk).
 
-In co-developing dependent libraries, I've found it convenient to `localize!` git coordinates of a project that are changing frequently, i.e. recursively convert them to `:local/root` coordinates so that no deployment step is needed to affect changes.
+In co-developing dependent libraries, it's convenient to `localize!` git coordinates of a project that are changing frequently, i.e. recursively convert them to `:local/root` coordinates so that no deployment step is needed to affect changes.
 
 Once the changes have finalized, the local coordinates must be `update!`'d back to `:git/url` coordinates with the appropriate (new) revision as the `:sha`, which must be done in accordance with the dependency tree (depth-first).
 
-This library automates recursively toggling between `:local/root` and `:git/url` coordinates in a `tools.deps` project.
+This library automates recursively toggling between `:local/root` (`nuid.deps/localize!`) and `:git/url` (`nuid.deps/update!`) dependency coordinates in a `tools.deps` project.
 
 ## Notes
 
@@ -94,7 +94,7 @@ This will cause `nuid.deps` to read locally from: `/Users/example/dev/repo1/lib<
 
 and to push to: `https://github.com/repo1/lib<1,2,...>`.
 
-Correct...the `:deps/repositories` key basically just allows for the exploitation of naming conventions.
+Correct—the `:deps/repositories` key basically just allows for the exploitation of naming conventions.
 
 There are some other usage patterns as well, e.g. using `git@github.com` as the `:git/root` to push to (potentially private) repositories using `ssh`, and specifying a "deps/repository" within a single git repository by using `:git/url` instead of `:git/root`.
 
