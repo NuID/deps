@@ -49,7 +49,24 @@ $ clj
 => ...
 ```
 
-### `deps.config.edn`
+## `tools.deps` alias
+
+This library also adds a forked and regularly rebased branch of `tools.deps` with `add-lib` included (at least until this feature makes it to master). It can be useful to add it as a standalone `alias` in `deps.edn` for dynamic `lib` and `dep` management, e.g.:
+
+```
+:aliases
+{:repl
+ {:extra-deps
+  {nuid/deps
+   {:git/url "https://github.com/nuid/deps.git",
+    :sha "..."}}}}
+```
+
+When started with `clj -A:repl`, the REPL's classpath can be changed dynamically using `tools.deps/add-lib`. That change can be then persisted using `nuid.deps/add-dep!`. This functionality is experimental, and the API isn't the most empowering quite yet.
+
+The dependencies of the project can also be `localize!`d and subsequently `update!`d without leaving the REPL. After an `update!`, it would require a REPL refresh to clone the new revisions into `gitlibs` and add them to the classpath, but the new revisions would be identical to the local coordinates already on the classpath after the original `localize!` and subsequent `(require '[...] :reload-all)`.
+
+## `deps.config.edn`
 
 The dependencies to be managed by this tool are specified in a map that most of the functions take as their first parameter. I imagine this map will typically be generated from an `edn` configuration file. The default path for `nuid.deps/read-config` is `./deps.config.edn`.
 
@@ -92,28 +109,11 @@ Correct...it basically just allows for a naming convention to be exploited.
 
 There are some other usage patterns as well, e.g. using `git@github.com` as the `:git/root` to use `ssh` to push to (potentially private) repositories, and specifying "repositories" within a single git repository by using `:git/url` instead of `:git/root`.
 
-### `git`
+## `git`
 
 This library shells out to `git`, which means it will inherit configuration from the environment. The git interactions are altogether primitive.
 
 Beyond allowing for the specification of commit messages, `nuid.deps` does very little in terms of specifying (or allowing the specification of) git commands—it will push to the currently checked out branch according to the environment configuration of `git commit` and `git push`. This includes `git hooks`, commit signing, etc..
-
-### `tools.deps` alias
-
-This library also adds a forked and regularly rebased branch of `tools.deps` with `add-lib` included (at least until this feature makes it to master). It can be useful to add it as a standalone `alias` in `deps.edn` for dynamic `lib` and `dep` management, e.g.:
-
-```
-:aliases
-{:repl
- {:extra-deps
-  {nuid/deps
-   {:git/url "https://github.com/nuid/deps.git",
-    :sha "..."}}}}
-```
-
-When started with `clj -A:repl`, the REPL's classpath can be changed dynamically using `tools.deps/add-lib`. That change can be then persisted using `nuid.deps/add-dep!`. This functionality is experimental, and the API isn't the most empowering quite yet.
-
-The dependencies of the project can also be `localize!`d and subsequently `update!`d without leaving the REPL. After an `update!`, it would require a REPL refresh to clone the new revisions into `gitlibs` and add them to the classpath, but the new revisions would be identical to the local coordinates already on the classpath after the original `localize!` and subsequent `(require '[...] :reload-all)`.
 
 ## Contributing
 
