@@ -11,12 +11,13 @@
    [nuid/cryptography
     nuid/exception
     nuid/ethereum
+    nuid/elliptic
     nuid/transit
+    nuid/base64
     nuid/utils
     nuid/specs
     nuid/bytes
     nuid/deps
     nuid/zka
-    nuid/ecc
     nuid/hex
     nuid/bn]}]}
