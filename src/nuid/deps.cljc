@@ -34,8 +34,8 @@
        (apply merge (dissoc config :deps/repositories))))
 
 (defn read-config
-  [& [{:keys [path] :or {path (str (System/getProperty "user.dir") "/deps.config.edn")}}]]
-  (parse-config (read-edn path)))
+  ([] (read-config (str (System/getProperty "user.dir") "/deps.config.edn")))
+  ([path] (parse-config (read-edn path))))
 
 (defn deps-path [config lib] (str (:local/root (config lib)) "/deps.edn"))
 
