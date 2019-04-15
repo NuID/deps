@@ -123,6 +123,10 @@ This library shells out to `git`, which means it will inherit configuration from
 
 Beyond allowing for the specification of commit messages, `nuid.deps` does very little in terms of specifying (or allowing the specification of) git commands—**it will push to the currently checked out branch** according to the environment configuration of `git commit` and `git push`. This includes `git hooks`, commit signing, etc..
 
+## Licensing
+
+Apache v2.0 or MIT
+
 ## Contributing
 
 PRs would be most welcome! At the top of my list is `spec`ing the library, making the API more friendly in map, reduce, etc. for bulk operations, and revisiting the `git` interactions entirely.
