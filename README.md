@@ -26,7 +26,7 @@ Dependency tree construction and traversal is pretty naive. `nuid.deps` is entir
 
 ### tools.deps:
 
-`{nuid/deps {:git/url "https://github.com/nuid/deps" :sha "..."}`
+`{nuid/deps {:git/url "https://github.com/nuid/deps" :sha "..."}}`
 
 ### usage:
 
