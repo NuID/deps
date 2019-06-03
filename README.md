@@ -79,7 +79,7 @@ The syntax of the `deps.config.edn` file is standard `edn`, and it looks somewha
 There is a more concise way to specify groups (loosely "deps/repositories", which is probably poor nomenclature given the context) of related libraries as well:
 
 ```
-{'some/lib {:local/root "..." :git/url "..."},
+{some/lib {:local/root "..." :git/url "..."},
  ...
  :deps/repositories
  [{:repository/root "/Users/example/dev"
