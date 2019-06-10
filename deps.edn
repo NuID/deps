@@ -3,7 +3,7 @@
   clj-jgit {:mvn/version "0.8.10"},
   org.clojure/tools.deps.alpha
   {:git/url "https://github.com/nuid/tools.deps.alpha.git",
-   :sha "9825f0ec1481178adb9a5ef308fbdb81da80e0f5"}},
+   :sha "495d75598d62c6a248817c44af1a3c2d3a615970"}},
  :aliases
  {:cljfmt
   {:extra-deps
