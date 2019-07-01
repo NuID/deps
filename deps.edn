@@ -1,5 +1,5 @@
 {:deps
- {org.clojure/clojure {:mvn/version "1.10.0"},
+ {org.clojure/clojure {:mvn/version "1.10.1"},
   clj-jgit {:mvn/version "0.8.10"},
   org.clojure/tools.deps.alpha
   {:git/url "https://github.com/nuid/tools.deps.alpha.git",
@@ -9,7 +9,7 @@
   {:extra-deps
    {com.jameslaverack/cljfmt-runner
     {:git/url "https://github.com/JamesLaverack/cljfmt-runner",
-     :sha "97960e9a6464935534b5a6bab529e063d0027128"}},
+     :sha "d6952345b3047e03ca3a88f89a1433c109b7b442"}},
    :main-opts ["-m" "cljfmt-runner.check"]},
   :cljfmt/fix {:main-opts ["-m" "cljfmt-runner.fix"]},
   :depot
