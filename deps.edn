@@ -3,7 +3,7 @@
   clj-jgit {:mvn/version "0.8.10"},
   org.clojure/tools.deps.alpha
   {:git/url "https://github.com/nuid/tools.deps.alpha.git",
-   :sha "495d75598d62c6a248817c44af1a3c2d3a615970"}},
+   :sha "d878f5a73ac671fa0ef2c1d6bcfc450697e8107d"}},
  :aliases
  {:cljfmt
   {:extra-deps
@@ -13,7 +13,7 @@
    :main-opts ["-m" "cljfmt-runner.check"]},
   :cljfmt/fix {:main-opts ["-m" "cljfmt-runner.fix"]},
   :depot
-  {:extra-deps {olical/depot {:mvn/version "1.8.2"}},
+  {:extra-deps {olical/depot {:mvn/version "1.8.4"}},
    :main-opts ["-m" "depot.outdated.main"]},
   :depot/update {:main-opts ["-m" "depot.outdated.main --update"]}},
  :paths ["src"]}
