@@ -1,13 +1,13 @@
 (ns nuid.deps
   (:require
-   [clojure.spec.alpha :as s]
-   [clojure.string :as str]
-   [clojure.set :as set]
-   #?@(:clj
-       [[clj-jgit.porcelain :as git]
-        [clojure.java.shell :as sh]
-        [clojure.java.io :as io]
-        [clojure.edn :as edn]])))
+    [clojure.spec.alpha :as s]
+    [clojure.string :as str]
+    [clojure.set :as set]
+    #?@(:clj
+        [[clj-jgit.porcelain :as git]
+         [clojure.java.shell :as sh]
+         [clojure.java.io :as io]
+         [clojure.edn :as edn]])))
 
 (defn read-edn [f]
   (with-open [r (io/reader f)]
@@ -22,8 +22,9 @@
       (clojure.pprint/pprint data))))
 
 (defn parse-lib [{r :repository/root g :git/root u :git/url} lib]
-  [lib {:git/url (if g (str g "/" lib ".git") u)
-        :local/root (str r "/" lib)}])
+  [lib {:git/url    (if g (str g "/" lib ".git") u)
+        :local/root (if g (str r "/" (last (str/split (str lib) #"/")))
+                          (str r "/" lib))}])
 
 (defn parse-repository [{:keys [repository/libs] :as repository}]
   (into {} (map (partial parse-lib repository)) libs))
