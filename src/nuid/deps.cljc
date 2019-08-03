@@ -107,19 +107,22 @@
               (assoc-in acc [k :message] in)))]
     (reduce f config updates)))
 
-(defn add-commit-push! [path message]
-  (prn 'pushing (symbol path))
+(defn commit! [path message]
   (sh/sh "git" "add" "." :dir path)
-  (sh/sh "git" "commit" "-m" message :dir path)
-  (let [p (sh/sh "git" "push" :dir path)]
-    (clojure.pprint/pprint p))
-  (rev path))
+  (sh/sh "git" "commit" "-m" message :dir path))
 
-(defn dep-sha! [config lib]
+(defn push! [path]
+  (let [p (sh/sh "git" "push" :dir path)]
+    (clojure.pprint/pprint p)))
+
+(defn dep-sha! [config lib push]
   (let [path (:local/root (lib config))
         v (if (clean? path)
             (rev path)
-            (add-commit-push! path (:message (lib config))))]
+            (do (commit! path (:message (lib config)))
+                (if push
+                  (push! path))
+                (rev path)))]
     (assoc-in config [lib :sha] v)))
 
 (defn update-deps [config deps]
@@ -129,7 +132,7 @@
         updated-aliases (into {} (map (partial extra-deps-xf git-coords)) (:aliases deps))]
     (assoc deps :deps updated-deps :aliases updated-aliases)))
 
-(defn update-deps! [config lib]
+(defn update-deps! [config lib push]
   (let [deps (read-deps config lib)
         all-libs (set (keys config))
         updated-libs (set (map first (filter (comp :sha second) config)))
@@ -141,17 +144,19 @@
       (let [updated-deps (update-deps config deps)
             path (deps-path config lib)]
         (write-edn! path updated-deps)
-        (dep-sha! config lib))
-      (let [c (reduce (fn [_ l] (update-deps! config l)) {} libs-to-update)]
-        (update-deps! c lib)))))
+        (dep-sha! config lib push))
+      (let [c (reduce (fn [_ l] (update-deps! config l push)) {} libs-to-update)]
+        (update-deps! c lib push)))))
 
 (defn update!
   "First prompts the user for the commit messages to be applied. Then recursively
   updates `:local/root` coordinates in `lib` and its dependencies defined in
   `config` to `:git/url` coordinates at the most recent revision (`:sha`)."
-  [config lib]
-  (-> (add-commit-messages config lib)
-      (update-deps! lib)))
+  ([config lib]
+   (update! config lib false))
+  ([config lib push]
+   (-> (add-commit-messages config lib)
+       (update-deps! lib push))))
 
 (defn add-dep [deps dep] (update deps :deps merge dep))
 
