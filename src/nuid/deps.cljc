@@ -22,9 +22,17 @@
       (clojure.pprint/pprint data))))
 
 (defn parse-lib [{r :repository/root g :git/root u :git/url} lib]
-  [lib {:git/url    (if g (str g "/" lib ".git") u)
-        :local/root (if g (str r "/" (last (str/split (str lib) #"/")))
-                        (str r "/" lib))}])
+  [lib {:git/url    (if g
+                      (str g
+                           (if (str/starts-with? g "git@")
+                             ":"
+                             "/")
+                           lib
+                           ".git")
+                      u)
+        :local/root (if g
+                      (str r "/" (last (str/split (str lib) #"/")))
+                      (str r "/" lib))}])
 
 (defn parse-repository [{:keys [repository/libs] :as repository}]
   (into {} (map (partial parse-lib repository)) libs))
