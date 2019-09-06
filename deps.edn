@@ -2,8 +2,8 @@
  {org.clojure/clojure {:mvn/version "1.10.1"},
   clj-jgit {:mvn/version "0.8.10"},
   org.clojure/tools.deps.alpha
-  {:git/url "https://github.com/nuid/tools.deps.alpha.git",
-   :sha "d878f5a73ac671fa0ef2c1d6bcfc450697e8107d"}},
+  {:git/url "https://github.com/clojure/tools.deps.alpha.git",
+   :sha "148cab8f154711f8495bd632ebdc53a14dff7f09"}},
  :aliases
  {:cljfmt
   {:extra-deps
