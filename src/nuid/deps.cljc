@@ -182,3 +182,12 @@
   ([config lib rmlib] (remove-dep! (deps-path config lib) rmlib))
   ([path lib] (let [deps (remove-dep (read-deps path) lib)]
                 (write-edn! path deps))))
+
+(comment
+
+  (require '[nuid.deps :as deps])
+  (def config (deps/read-config "/Users/nolan/dev/nuid/deps/deps.config.edn"))
+  (deps/localize! config 'lambda/register)
+  (deps/update! config 'datomic/ions
+
+                true))
