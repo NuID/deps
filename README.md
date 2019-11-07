@@ -131,8 +131,6 @@ Apache v2.0 or MIT
 
 PRs would be most welcome! At the top of my list is `spec`ing the library, making the API more friendly in map, reduce, etc. for bulk operations, and revisiting the `git` interactions entirely.
 
-Install [`git-hooks`](https://github.com/icefox/git-hooks) and fire away.
-
 ### formatting:
 
 ```

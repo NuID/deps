@@ -17,8 +17,8 @@
 (defn write-edn! [path data]
   (with-open [w (io/writer path)]
     (binding [*print-namespace-maps* false
-              *print-length* false
-              *out* w]
+              *print-length*         false
+              *out*                  w]
       (clojure.pprint/pprint data))))
 
 (defn parse-lib [{r :repository/root g :git/root u :git/url} lib]
@@ -38,9 +38,10 @@
   (into {} (map (partial parse-lib repository)) libs))
 
 (defn parse-config [config]
-  (->> (config :deps/repositories)
-       (map parse-repository)
-       (apply merge (dissoc config :deps/repositories))))
+  (->>
+   (config :deps/repositories)
+   (map parse-repository)
+   (apply merge (dissoc config :deps/repositories))))
 
 (defn read-config
   ([] (read-config (str (System/getProperty "user.dir") "/deps.config.edn")))
@@ -56,13 +57,13 @@
   "Computes the set of libraries that need to be updated as part of updating `lib`."
   ([config lib] (compute-updates config #{} lib))
   ([config acc lib]
-   (let [deps (read-deps config lib)
+   (let [deps       (read-deps config lib)
          extra-deps (set (mapcat (comp keys :extra-deps second) (:aliases deps)))
-         all-deps (set/union (set (keys (:deps deps))) extra-deps)
-         all (set (keys config))
-         i (set/intersection all-deps all)
-         d (set/difference i acc)
-         u (set/union i acc)]
+         all-deps   (set/union (set (keys (:deps deps))) extra-deps)
+         all        (set (keys config))
+         i          (set/intersection all-deps all)
+         d          (set/difference i acc)
+         u          (set/union i acc)]
      (if (empty? d)
        acc
        (reduce (fn [a l] (set/union a (compute-updates config a l))) u d)))))
@@ -74,9 +75,9 @@
        v)])
 
 (defn localize-deps [config deps]
-  (let [as-local-coord (fn [[k v]] [k (select-keys v [:local/root])])
-        local-coords (into {} (map as-local-coord) config)
-        updated-deps (merge (:deps deps) (select-keys local-coords (keys (:deps deps))))
+  (let [as-local-coord  (fn [[k v]] [k (select-keys v [:local/root])])
+        local-coords    (into {} (map as-local-coord) config)
+        updated-deps    (merge (:deps deps) (select-keys local-coords (keys (:deps deps))))
         updated-aliases (into {} (map (partial extra-deps-xf local-coords)) (:aliases deps))]
     (assoc deps :deps updated-deps :aliases updated-aliases)))
 
@@ -107,12 +108,12 @@
 
 (defn add-commit-messages [config lib]
   (let [updates (conj (compute-updates config lib) lib)
-        f (fn [acc k]
-            (prn k 'commit (symbol "message:"))
-            (let [in (read-line)
-                  in (if (empty? in) (str "Updated " k " dependencies") in)]
-              (prn in)
-              (assoc-in acc [k :message] in)))]
+        f       (fn [acc k]
+                  (prn k 'commit (symbol "message:"))
+                  (let [in (read-line)
+                        in (if (empty? in) (str "Updated " k " dependencies") in)]
+                    (prn in)
+                    (assoc-in acc [k :message] in)))]
     (reduce f config updates)))
 
 (defn commit! [path message]
@@ -125,32 +126,32 @@
 
 (defn dep-sha! [config lib push]
   (let [path (:local/root (lib config))
-        v (if (clean? path)
-            (rev path)
-            (do (commit! path (:message (lib config)))
-                (if push
-                  (push! path))
-                (rev path)))]
+        v    (if (clean? path)
+               (rev path)
+               (do (commit! path (:message (lib config)))
+                   (if push
+                     (push! path))
+                   (rev path)))]
     (assoc-in config [lib :sha] v)))
 
 (defn update-deps [config deps]
-  (let [as-git-coord (fn [[k v]] [k (select-keys v [:git/url :sha])])
-        git-coords (into {} (map as-git-coord) config)
-        updated-deps (merge (:deps deps) (select-keys git-coords (keys (:deps deps))))
+  (let [as-git-coord    (fn [[k v]] [k (select-keys v [:git/url :sha])])
+        git-coords      (into {} (map as-git-coord) config)
+        updated-deps    (merge (:deps deps) (select-keys git-coords (keys (:deps deps))))
         updated-aliases (into {} (map (partial extra-deps-xf git-coords)) (:aliases deps))]
     (assoc deps :deps updated-deps :aliases updated-aliases)))
 
 (defn update-deps! [config lib push]
-  (let [deps (read-deps config lib)
-        all-libs (set (keys config))
-        updated-libs (set (map first (filter (comp :sha second) config)))
-        deps-libs (set (keys (:deps deps)))
+  (let [deps            (read-deps config lib)
+        all-libs        (set (keys config))
+        updated-libs    (set (map first (filter (comp :sha second) config)))
+        deps-libs       (set (keys (:deps deps)))
         extra-deps-libs (set (mapcat (comp keys :extra-deps second) (:aliases deps)))
-        all-deps-libs (set/union deps-libs extra-deps-libs)
-        libs-to-update (set/difference (set/intersection all-deps-libs all-libs) updated-libs)]
+        all-deps-libs   (set/union deps-libs extra-deps-libs)
+        libs-to-update  (set/difference (set/intersection all-deps-libs all-libs) updated-libs)]
     (if (empty? libs-to-update)
       (let [updated-deps (update-deps config deps)
-            path (deps-path config lib)]
+            path         (deps-path config lib)]
         (write-edn! path updated-deps)
         (dep-sha! config lib push))
       (let [c (reduce (fn [_ l] (update-deps! config l push)) {} libs-to-update)]
@@ -163,8 +164,9 @@
   ([config lib]
    (update! config lib false))
   ([config lib push]
-   (-> (add-commit-messages config lib)
-       (update-deps! lib push))))
+   (->
+    (add-commit-messages config lib)
+    (update-deps! lib push))))
 
 (defn add-dep [deps dep] (update deps :deps merge dep))
 
